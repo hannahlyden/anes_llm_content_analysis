@@ -17,7 +17,7 @@
 - **Dataset:** ANES 2024 Time Series Survey  
 - **Sample size:** ~4,500 respondents  
 - **Key variables:**  
-  - `open_ended_response` — respondent’s text answer  
+  - `response_text` — respondent’s text answer  
   - Demographics: age, gender, race, education, marital status, occupational status, income, and party ID  
 - **Human-coded labels:** Coded into 10 categories (Economy, Healthcare, Politics, Social Issues, Crime, Immigration, Environment, Foreign Policy, Other, Unclear)  
 
@@ -96,7 +96,6 @@ To ensure consistency between human and LLM coding, the following decision rules
 ### Research Process
 - **Human coding:**  
   - Hand-coded ~300 responses to establish gold standard  
-  - Interrater reliability measured with Cohen’s κ
 - **LLM coding:**  
   - Batch processed responses using structured prompt  
   - Output restricted to one category per response
@@ -119,8 +118,16 @@ To ensure consistency between human and LLM coding, the following decision rules
   |  0 |   0 |   3 |   0 |  0 |    0 |   0 |   0 |  1 |  10 |
 
 ## Analysis
-- **Categories Collapsed**:
-  - Education and Party ID categories were collapsed
+- **Outcome variables**: Binary indicators for LLM-coded primary issue categories (*Economy*, *Politics/Democracy*, *Unclear*).
+- **Predictors**: Demographics including age, income, gender, race, marital status, occupation, education, and party ID.
+- **Category collapsing**:
+    - *Education*: Less than HS, High school, Some college, Bachelor’s degree, Graduate degree, No info
+    - *Party ID*: Democrat, Republican, Independent, No info
+- **Statistical approach**:
+    - Logistic regression models estimated the probability of a response being coded to a given category (e.g., *Economy*, *Politics/Democracy*, *Unclear*) based on demographic predictors.
+    - Predicted probabilities were calculated holding continuous variables (age, income) at their mean values to illustrate subgroup differences.
+- **Visualization**: Predicted probabilities plotted by education and party ID to show demographic patterns in LLM-coded category assignments.
+
 ---
 
 ## 4. Results
@@ -140,6 +147,20 @@ To ensure consistency between human and LLM coding, the following decision rules
     - A human could assign many of these to Economy, Healthcare, etc.
     - Only ~2 of 50 cases were genuinely uninterpretable.
 
+
+| LLM Code Label   |   proportion |
+|-------------------|-------------|
+| Unclear    |  42.6 |
+| Economy    |  20.6 |
+| Politics/Democracy |   10.2 |
+| Social Issues      |          9.7 |
+| Immigration        |          7.8 |
+| Healthcare         |          3.3 |
+| Crime              |          2   |
+| Environment        |          1.6 |
+| Foreign Policy     |          1.1 |
+| Other              |          1   |
+
 ### Qualitative Audit Findings
 A qualitative audit of misclassified responses indicates that LLM errors are systematic and interpretable, rather than random. The most common error type involved responses that mentioned multiple policy areas. In these cases, the LLM frequently defaulted to *Economy* when economic terms (e.g., “inflation,” “spending”) appeared, even when *Politics/Democracy* or *Social Issues* were more emphasized overall. This pattern suggests that the model overweighted salient economic keywords relative to respondent emphasis, contrary to the primary issue decision rule.
 
@@ -151,6 +172,19 @@ Importantly, the high prevalence of *Unclear* classifications does not primarily
 
 Overall, the audit indicates that LLM performance is strongest for single-issue, concrete responses, with errors concentrated in multi-issue statements, abstract evaluations, and category-boundary cases. These findings informed refinements to the decision rules and provide clear guidance for prompt design and post-coding validation in similar applications.
 
+### Demographic Predictors of Issue Classification
+
+To assess whether LLM-coded issue categories varied systematically across respondent characteristics, logistic regression models were estimated predicting the likelihood that a response was coded to selected categories as a function of party identification, education, age, and income. These models reveal clear and substantively interpretable demographic patterning in LLM-coded outputs.
+
+Responses coded as *Unclear* were significantly more likely among respondents with lower levels of education. Compared to respondents with a bachelor’s degree (the reference category), those with less than a high school education, a high school diploma, or some college were all more likely to receive an *Unclear* classification. Respondents with missing party identification were also more likely to be coded as *Unclear*. Figure 1 presents predicted probabilities of an *Unclear* classification by education level, holding age and income at their sample means and party identification constant. The figure shows a pronounced education gradient, with the highest predicted probability among respondents with less than a high school education and progressively lower probabilities among more highly educated respondents.
+
+![Figure 1: Likelihood of Unclear LLM-coded Response by Education Level](<Figures/unclear by education.png>)
+
+Substantive issue categories also exhibited systematic demographic variation. Independent respondents, respondents with no party identification, and Republicans were significantly more likely than Democrats to cite the *Economy* as the most important problem, while respondents with graduate degrees were less likely than those with bachelor’s degrees to do so. By contrast, *Politics/Democracy* responses were disproportionately concentrated among Democrats and among more highly educated respondents; individuals with less than a bachelor’s degree were significantly less likely to be classified into this category. Age was positively associated with *Politics/Democracy* and negatively associated with *Economy*, indicating that older respondents were more likely to focus on institutional and democratic concerns, while younger respondents were more likely to emphasize economic issues.
+
+Taken together, these results suggest that LLM-coded categories capture meaningful and theoretically plausible demographic patterns, lending additional support to the validity of the automated coding approach.
+
+![Figure 2: Predicted Probabilites for Citing Economy or Politics/Democracy by Education and Party ID](<Figures/economy:politics by educ and party.png>)
 ---
 
 ## 5. Discussion
